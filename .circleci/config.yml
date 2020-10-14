@@ -2,8 +2,9 @@ version: 2
 jobs:
   build:
     docker:
-      - image: buildpack-deps:trusty
+      - image: cimg/go:1.15.2
     steps:
+      - add_ssh_keys
       - checkout
 
       - run:
@@ -13,17 +14,40 @@ jobs:
             sudo apt-get -y install unzip
 
       - run:
+          name: Install terrarium
+          command: go get github.com/evantbyrne/terrarium
+
+      - run:
+          name: Lock S3 state
+          command: terrarium -expires=$TERRARIUM_EXPIRES -s3-bucket=$TERRARIUM_S3_BUCKET -s3-region=$TERRARIUM_S3_REGION lock circleci-digitalocean-terraform
+
+      - run:
           name: Install terraform
           command: |
-            wget https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
-            unzip terraform_0.12.28_linux_amd64.zip
+            wget https://releases.hashicorp.com/terraform/0.13.4/terraform_0.13.4_linux_amd64.zip
+            unzip terraform_0.13.4_linux_amd64.zip
             sudo chmod +rx terraform
             sudo mv terraform /usr/local/bin/terraform
             terraform init
 
       - run:
-          name: Plan
-          command: terraform plan
+          name: Provision
+          command: |
+            terraform apply \
+              -auto-approve \
+              -no-color \
+              -state=circleci-digitalocean-terraform/state/terraform.tfstate
+              -var "branch=master" \
+              -var "do_count=$DO_COUNT" \
+              -var "do_image=$DO_IMAGE" \
+              -var "do_region=$DO_REGION" \
+              -var "do_ssh_keys=$DO_SSH_KEYS" \
+              -var "do_size=$DO_SIZE" \
+              -var "do_token=$DO_TOKEN"
+
+      - run:
+          name: Commit S3 state
+          command: terrarium -s3-bucket=$TERRARIUM_S3_BUCKET -s3-region=$TERRARIUM_S3_REGION commit circleci-digitalocean-terraform
 
 workflows:
   version: 2
