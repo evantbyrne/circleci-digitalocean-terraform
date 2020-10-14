@@ -4,8 +4,8 @@ jobs:
     docker:
       - image: cimg/go:1.15.2
     steps:
-      - add_ssh_keys
       - checkout
+      - add_ssh_keys
 
       - run:
           name: Install unzip
