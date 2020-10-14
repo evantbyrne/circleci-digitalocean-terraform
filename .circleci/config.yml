@@ -33,6 +33,7 @@ jobs:
       - run:
           name: Provision
           command: |
+            LOCAL_ID_RSA_PATH=$(find ~/.ssh/ -type f -iname "id_rsa_*")
             terraform apply \
               -auto-approve \
               -no-color \
@@ -43,7 +44,8 @@ jobs:
               -var "do_region=$DO_REGION" \
               -var "do_ssh_keys=$DO_SSH_KEYS" \
               -var "do_size=$DO_SIZE" \
-              -var "do_token=$DO_TOKEN"
+              -var "do_token=$DO_TOKEN" \
+              -var "file_ssh_private_key=$LOCAL_ID_RSA_PATH"
 
       - run:
           name: Commit S3 state
