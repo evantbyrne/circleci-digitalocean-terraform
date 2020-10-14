@@ -36,7 +36,7 @@ jobs:
             terraform apply \
               -auto-approve \
               -no-color \
-              -state=circleci-digitalocean-terraform/state/terraform.tfstate
+              -state=circleci-digitalocean-terraform/state/terraform.tfstate \
               -var "branch=master" \
               -var "do_count=$DO_COUNT" \
               -var "do_image=$DO_IMAGE" \
